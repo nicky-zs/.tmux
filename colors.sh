@@ -14,7 +14,10 @@ case "$1" in
 	bg)
 		showColors 48
 		;;
+	"")
+		echo "Usage: $0 {fg|bg|0|1|2|...|255}" && exit 1
+		;;
 	*)
-		echo "Usage: $0 {fg|bg}"
-		exit 1
+		printf "\x1b[48;5;${1}m%-$(tput cols)s\x1b[0m\n"
+		;;
 esac
