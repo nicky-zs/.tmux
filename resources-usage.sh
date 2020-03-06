@@ -54,7 +54,7 @@ mem_usage() {
 
 cpu_usage() {
 	local prev=$(cat '/tmp/tmux-cpu-stat-last')
-	local last=$(grep '^cpu[0-9]* ' /proc/stat | awk '{s=0;for(i=2;i<=NF;i++){s+=$i};print $5,s}' | tee '/tmp/tmux-cpu-stat-last')
+	local last=$(grep '^cpu[0-9]* ' /proc/stat | awk '{s=0;for(i=2;i<=NF;i++){s+=$i};print $5+$6,s}' | tee '/tmp/tmux-cpu-stat-last')
 	local rate=$(paste <(echo "$prev") <(echo "$last") | awk '{print 100-(100.0*($3-$1)/($4-$2))}')
 
 	local cpu=$(echo "$rate" | head -n 1)
