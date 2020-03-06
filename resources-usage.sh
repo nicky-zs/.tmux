@@ -61,7 +61,7 @@ cpu_usage() {
 	local cores=$(echo "$rate" | tail -n +2 | wc -l)
 	if [[ $cores == 1 ]]; then
 		if [[ $short == 1 ]]; then
-			printf "$(get_color $cpu)%3.1f%%" $cpu
+			printf "$(get_color $cpu)%3.1f%%$(reset_color)|" $cpu
 		else
 			printf "$(get_color $cpu) CPU:%3.1f%% " $cpu
 		fi
