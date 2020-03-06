@@ -2,6 +2,12 @@
 
 set -eu
 
+if [[ ${1-""} == "short" ]]; then
+	short=1
+else
+	short=0
+fi
+
 get_color() {
 	local num=$1
 	if [[ $(bc <<< "$num >= 80") == 1 ]]; then # high
@@ -11,6 +17,10 @@ get_color() {
 	else # low
 		echo "#[bg=colour10,fg=colour255]"
 	fi
+}
+
+reset_color() {
+	echo "#[bg=colour10,fg=colour255]"
 }
 
 display_kb() {
@@ -35,7 +45,11 @@ mem_usage() {
 		usage=$(( MemTotal - MemFree - Buffers - Cached ))
 	fi
 	local rate=$(bc <<< "scale=3; $usage / $MemTotal")
-	printf "$(get_color $rate) %s/%s " $(display_kb $usage) $(display_kb $MemTotal)
+	if [[ $short == 1 ]]; then
+		printf "$(get_color $rate)%s/%s" $(display_kb $usage) $(display_kb $MemTotal)
+	else
+		printf "$(get_color $rate) %s/%s " $(display_kb $usage) $(display_kb $MemTotal)
+	fi
 }
 
 cpu_usage() {
@@ -46,10 +60,18 @@ cpu_usage() {
 	local cpu=$(echo "$rate" | head -n 1)
 	local cores=$(echo "$rate" | tail -n +2 | wc -l)
 	if [[ $cores == 1 ]]; then
-		printf "$(get_color $cpu) CPU:%3.1f%% " $cpu
+		if [[ $short == 1 ]]; then
+			printf "$(get_color $cpu)%3.1f%%" $cpu
+		else
+			printf "$(get_color $cpu) CPU:%3.1f%% " $cpu
+		fi
 	else
 		local core=$(echo "$rate" | tail -n +2 | sort -rn | head -n 1)
-		printf "$(get_color $cpu) CPU:%3.1f%% $(get_color $core) Core:%3.1f%% " $cpu $core
+		if [[ $short == 1 ]]; then
+			printf "$(get_color $cpu)%3.1f%%$(reset_color)|$(get_color $core)%3.1f%%$(reset_color)|" $cpu $core
+		else
+			printf "$(get_color $cpu) CPU:%3.1f%% $(get_color $core) Core:%3.1f%% " $cpu $core
+		fi
 	fi
 }
 
