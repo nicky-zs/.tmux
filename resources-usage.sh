@@ -44,7 +44,7 @@ mem_usage() {
 	else
 		usage=$(( MemTotal - MemFree - Buffers - Cached ))
 	fi
-	local rate=$(bc <<< "scale=3; $usage / $MemTotal")
+	local rate=$(bc <<< "scale=3; 100.0 * $usage / $MemTotal")
 	if [[ $short == 1 ]]; then
 		printf "$(get_color $rate)%s" $(display_kb $usage)
 	else
