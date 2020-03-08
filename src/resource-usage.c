@@ -54,7 +54,7 @@ static inline void display_mem(resource_usage *mem) {
 	char unit_total = new_unit(mem->total, &total);
 
 	if (narrow) {
-		printf("%s%3.1f%c%s", color(rate), in_use, unit_in_use, color(0));
+		printf("%s%3.1f%c/%3.1f%c%s", color(rate), in_use, unit_in_use, total, unit_total, color(0));
 	} else {
 		printf("%s %3.1f%cB/%3.1f%cB %s", color(rate), in_use, unit_in_use, total, unit_total, color(0));
 	}
