@@ -54,7 +54,7 @@ static int record_list_dump(record_list *list, const char *path) {
 	return 0;
 }
 
-static inline int record_list_destroy(record_list *list) {
+static inline void record_list_destroy(record_list *list) {
 	free(list->elem);
 	list->elem = NULL;
 }
@@ -88,7 +88,7 @@ static int read_proc_stat(record_list *list) {
 
 		cpu_record record = { 0, 0 };
 		int i = 0;
-		while (token = strtok_r(NULL, delim, &saveptr)) {
+		while ((token = strtok_r(NULL, delim, &saveptr))) {
 			i++;
 			if (i != 4 && i != 5) {
 				record.busy += strtoul(token, NULL, 10);
