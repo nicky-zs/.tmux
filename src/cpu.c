@@ -4,7 +4,7 @@
 
 #include "resource-usage.h"
 
-static const char *cpu_tempfile = "/var/run/resource-usage.cpu.data";
+static const char *cpu_tempfile = "/tmp/resource-usage.cpu.data";
 
 typedef struct {
 	unsigned long long busy;
