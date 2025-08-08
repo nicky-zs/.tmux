@@ -14,10 +14,10 @@ static inline void exit_on_error(const char *msg) {
 }
 
 static inline const char *color(double rate) {
-	if (rate > 0.8) {
+	if (rate > 0.85) {
 		return "#[bg=colour1,fg=colour255]";
 	}
-	if (rate > 0.3) {
+	if (rate > 0.60) {
 		return "#[bg=colour3,fg=colour255]";
 	}
 	return "#[bg=colour10,fg=colour255]";
