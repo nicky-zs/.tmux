@@ -8,7 +8,6 @@
 
 ## 使用方法
 ```
-cd ~ && git clone https://github.com/nicky-zs/.tmux.git
-ln -s ~/.tmux/tmux.conf ~/.tmux.conf
+git clone https://github.com/nicky-zs/.tmux.git ~/.tmux && ln -s ~/.tmux/tmux.conf ~/.tmux.conf
 cd .tmux && sh gen_bin.sh
 ``
