@@ -3,13 +3,8 @@
 
 # ==================== 编译器与标志 ====================
 CC      := gcc
-CFLAGS  := -Wall -Wextra -O2 -g
+CFLAGS  := -O3 -DNDEBUG -Wall -Wextra
 LDFLAGS := -lm
-
-# 生产环境优化标志（可选：make release）
-ifdef RELEASE
-CFLAGS := -O3 -DNDEBUG -Wall -Wextra
-endif
 
 # ==================== 目录结构 ====================
 PREFIX      ?= /usr/local
@@ -107,8 +102,7 @@ distclean: clean
 help:
 	@echo "tmux resource usage - 可用目标:"
 	@echo ""
-	@echo "  make / make all   - 编译生产版本 (默认)"
-	@echo "  make release      - 编译优化版本 (O3 优化)"
+	@echo "  make / make all   - 编译生产版本 (默认，O3 优化)"
 	@echo "  make test         - 编译所有测试"
 	@echo "  make run-tests    - 运行所有测试"
 	@echo "  make install      - 安装到 $(DESTDIR)$(BINDIR)"
