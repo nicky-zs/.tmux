@@ -5,8 +5,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <fcntl.h>
-#include <sys/stat.h>
 
 typedef struct {
 	unsigned long long busy;
@@ -55,6 +53,7 @@ int mem_usage(resource_usage *mem);
 
 /* CPU 临时文件初始化（来自 cpu.c） */
 void init_cpu_tempfile(const char *tmux_env);
+void cleanup_cpu_tempfile(void);
 extern char *cpu_tempfile;
 
 /* 显示函数 - 暴露给测试 */
@@ -64,6 +63,8 @@ char new_unit(unsigned long long kb, double *new_size);
 void display_mem(resource_usage *mem, int narrow_mode);
 
 /* 工具函数 */
-#define starts_with(str, prefix) (strncmp((str), (prefix), sizeof(prefix) - 1) == 0)
+static inline int starts_with(const char *str, const char *prefix) {
+	return strncmp(str, prefix, strlen(prefix)) == 0;
+}
 
 #endif

@@ -29,8 +29,7 @@ void init_cpu_tempfile(const char *tmux_env) {
 		snprintf(unique_id + blen, sizeof(unique_id) - blen, ",%s", session_id);
 	} else {
 		// Fallback: use full string (truncated if needed)
-		strncpy(unique_id, tmux_env, sizeof(unique_id) - 1);
-		unique_id[sizeof(unique_id) - 1] = '\0';
+		snprintf(unique_id, sizeof(unique_id), "%s", tmux_env);
 	}
 
 	size_t len = strlen("/tmp/resource-usage.cpu..data") + strlen(unique_id) + 1;
@@ -46,8 +45,10 @@ void init_cpu_tempfile(const char *tmux_env) {
 
 int record_list_init(record_list *list, size_t init_cap) {
 	if (!list || init_cap <= 0) { return -1; }
-	if (!(list->elem = malloc(init_cap * sizeof(cpu_record)))) { return -1; }
+	list->elem = NULL;
 	list->len = 0;
+	list->cap = 0;
+	if (!(list->elem = malloc(init_cap * sizeof(cpu_record)))) { return -1; }
 	list->cap = init_cap;
 	return 0;
 }
@@ -130,6 +131,17 @@ int record_list_add(record_list *list, cpu_record *record) {
 
 /* ==================== CPU 统计解析 - 可测试 ==================== */
 
+/* /proc/stat cpu 行字段索引（从 1 开始） */
+enum cpu_field {
+	CPU_USER = 1,
+	CPU_NICE,
+	CPU_SYSTEM,
+	CPU_IDLE,
+	CPU_IOWAIT,
+	CPU_IRQ,
+	CPU_SOFTIRQ,
+};
+
 int read_proc_stat_from_stream(FILE *stream, record_list *list) {
 	if (!list || !stream) { return -1; }
 
@@ -153,13 +165,13 @@ int read_proc_stat_from_stream(FILE *stream, record_list *list) {
 		int i = 0;
 		while ((token = strtok_r(NULL, delim, &saveptr))) {
 			i++;
-			// user(1) + nice(2) + system(3) + idle(4) + iowait(5) + irq(6) + softirq(7) + ...
-			// busy = user + nice + system + irq + softirq + ...
-			// total = 所有字段之和
-			if (i != 4 && i != 5) {  // 跳过 idle 和 iowait
-				record.busy += strtoull(token, NULL, 10);
-			}
 			record.total += strtoull(token, NULL, 10);
+			// user + nice + system + irq + softirq = busy
+			// 跳过 idle 和 iowait
+			if (i == CPU_IDLE || i == CPU_IOWAIT) {
+				continue;
+			}
+			record.busy += strtoull(token, NULL, 10);
 		}
 		record_list_add(list, &record);
 	}
@@ -267,4 +279,9 @@ int cpu_usage(resource_usage *cpu, resource_usage *max_core, int *cores) {
 	record_list_destroy(&prev);
 	record_list_destroy(&current);
 	return (result == 0 || result == -2) ? 0 : -1;
+}
+
+void cleanup_cpu_tempfile(void) {
+	free(cpu_tempfile);
+	cpu_tempfile = NULL;
 }

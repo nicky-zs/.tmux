@@ -60,10 +60,11 @@ static int tests_failed = 0;
 static int tests_passed = 0;
 
 #define RUN_TEST(test_func) do { \
+	int prev_failed = tests_failed; \
 	tests_run++; \
 	fprintf(stderr, "Running %s...\n", #test_func); \
 	test_func(); \
-	if (tests_failed == 0 || tests_run == 1) { \
+	if (tests_failed == prev_failed) { \
 		tests_passed++; \
 	} \
 } while(0)
