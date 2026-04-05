@@ -24,19 +24,24 @@ const char *get_color_for_rate(double rate) {
 	if (rate >= CPU_WARNING_THRESHOLD) {
 		return "#[bg=colour3,fg=colour255]";
 	}
-	return "#[bg=colour10,fg=colour255]";
+	return "#[bg=colour10,fg=colour255]";  /* 正常时绿色背景 */
 }
 
 static const char *color(double rate) {
+	if (rate == 0) {
+		return "#[bg=colour10,fg=colour255]";  /* 重置为绿色背景 */
+	}
 	return get_color_for_rate(rate);
 }
 
 void display_cpu(resource_usage *cpu, const char *name, int narrow_mode) {
 	if (!cpu) { return; }
 	if (narrow_mode) {
-		printf("%s%3.1f%%%s|", color(cpu->rate), 100.0 * cpu->rate, color(0));
+		/* 空格在颜色外：只有内容飘红 */
+		printf("%s%3.1f%%%s |", color(cpu->rate), 100.0 * cpu->rate, color(0));
 	} else {
-		printf("%s %s%3.1f%%%s", color(cpu->rate), name, 100.0 * cpu->rate, color(0));
+		/* emoji 跟着数值一起高亮，空格在绿色背景内 */
+		printf("%s %s%s%3.1f%%%s", color(0), color(cpu->rate), name, 100.0 * cpu->rate, color(0));
 	}
 }
 
@@ -68,9 +73,11 @@ void display_mem(resource_usage *mem, int narrow_mode) {
 	in_use = rate * total;
 
 	if (narrow_mode) {
-		printf("%s%.1f/%.1f[%c]%s", color(rate), in_use, total, unit, color(0));
+		/* 空格在颜色外：只有内容飘红 */
+		printf("%s%.1f/%.1f[%c]%s ", color(rate), in_use, total, unit, color(0));
 	} else {
-		printf(" %s%.1f/%.1f[%c]%s ", color(rate), in_use, total, unit, color(0));
+		/* 前导空格保持默认背景，只有数值飘红 */
+		printf("%s %s%.1f/%.1f[%c]%s", color(0), color(rate), in_use, total, unit, color(0));
 	}
 }
 

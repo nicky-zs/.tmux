@@ -86,6 +86,58 @@ static void test_display_cpu_wide_mode(void) {
 	ASSERT_TRUE(strstr(buffer, "colour10") != NULL);  /* 50% 应该是绿色 */
 }
 
+static void test_display_cpu_wide_mode_warning(void) {
+	/* 测试警告负载 (70% - 黄色) */
+	resource_usage cpu = { .in_use = 70, .total = 100, .rate = 0.7 };
+
+	char buffer[256];
+	FILE *old_stdout = stdout;
+	FILE *temp = fopen("/tmp/test_display_output", "w");
+	ASSERT_TRUE(temp != NULL);
+	stdout = temp;
+
+	display_cpu(&cpu, "📊", 0);
+
+	fflush(temp);
+	stdout = old_stdout;
+	fclose(temp);
+
+	temp = fopen("/tmp/test_display_output", "r");
+	ASSERT_TRUE(temp != NULL);
+	ASSERT_TRUE(fgets(buffer, sizeof(buffer), temp) != NULL);
+	fclose(temp);
+	unlink("/tmp/test_display_output");
+
+	ASSERT_TRUE(strstr(buffer, "70.0%") != NULL);
+	ASSERT_TRUE(strstr(buffer, "colour3") != NULL);  /* 70% 应该是黄色 */
+}
+
+static void test_display_cpu_wide_mode_critical(void) {
+	/* 测试临界负载 (90% - 红色) */
+	resource_usage cpu = { .in_use = 90, .total = 100, .rate = 0.9 };
+
+	char buffer[256];
+	FILE *old_stdout = stdout;
+	FILE *temp = fopen("/tmp/test_display_output", "w");
+	ASSERT_TRUE(temp != NULL);
+	stdout = temp;
+
+	display_cpu(&cpu, "📊", 0);
+
+	fflush(temp);
+	stdout = old_stdout;
+	fclose(temp);
+
+	temp = fopen("/tmp/test_display_output", "r");
+	ASSERT_TRUE(temp != NULL);
+	ASSERT_TRUE(fgets(buffer, sizeof(buffer), temp) != NULL);
+	fclose(temp);
+	unlink("/tmp/test_display_output");
+
+	ASSERT_TRUE(strstr(buffer, "90.0%") != NULL);
+	ASSERT_TRUE(strstr(buffer, "colour1") != NULL);  /* 90% 应该是红色 */
+}
+
 static void test_display_cpu_narrow_mode(void) {
 	resource_usage cpu = { .in_use = 70, .total = 100, .rate = 0.7 };
 
@@ -158,7 +210,7 @@ static void test_new_unit_petabytes(void) {
 /* ==================== display_mem 测试 ==================== */
 
 static void test_display_mem_wide_mode(void) {
-	/* 16GB 总内存，使用 4GB */
+	/* 16GB 总内存，使用 4GB (25% - 绿色) */
 	resource_usage mem = {
 		.in_use = 4194304,  /* 4GB in KB */
 		.total = 16777216,  /* 16GB in KB */
@@ -187,6 +239,64 @@ static void test_display_mem_wide_mode(void) {
 	ASSERT_TRUE(strstr(buffer, "4.0/16.0") != NULL);
 	ASSERT_TRUE(strstr(buffer, "[G]") != NULL);
 	ASSERT_TRUE(strstr(buffer, "colour10") != NULL);  /* 25% 应该是绿色 */
+}
+
+static void test_display_mem_wide_mode_warning(void) {
+	/* 测试警告负载 (70% - 黄色) */
+	resource_usage mem = {
+		.in_use = 11534336,  /* 11GB in KB */
+		.total = 16777216,   /* 16GB in KB */
+		.rate = 0.70
+	};
+
+	char buffer[512];
+	FILE *old_stdout = stdout;
+	FILE *temp = fopen("/tmp/test_display_output", "w");
+	ASSERT_TRUE(temp != NULL);
+	stdout = temp;
+
+	display_mem(&mem, 0);
+
+	fflush(temp);
+	stdout = old_stdout;
+	fclose(temp);
+
+	temp = fopen("/tmp/test_display_output", "r");
+	ASSERT_TRUE(temp != NULL);
+	ASSERT_TRUE(fgets(buffer, sizeof(buffer), temp) != NULL);
+	fclose(temp);
+	unlink("/tmp/test_display_output");
+
+	ASSERT_TRUE(strstr(buffer, "colour3") != NULL);  /* 70% 应该是黄色 */
+}
+
+static void test_display_mem_wide_mode_critical(void) {
+	/* 测试临界负载 (90% - 红色) */
+	resource_usage mem = {
+		.in_use = 15099494,  /* 14.4GB in KB */
+		.total = 16777216,   /* 16GB in KB */
+		.rate = 0.90
+	};
+
+	char buffer[512];
+	FILE *old_stdout = stdout;
+	FILE *temp = fopen("/tmp/test_display_output", "w");
+	ASSERT_TRUE(temp != NULL);
+	stdout = temp;
+
+	display_mem(&mem, 0);
+
+	fflush(temp);
+	stdout = old_stdout;
+	fclose(temp);
+
+	temp = fopen("/tmp/test_display_output", "r");
+	ASSERT_TRUE(temp != NULL);
+	ASSERT_TRUE(fgets(buffer, sizeof(buffer), temp) != NULL);
+	fclose(temp);
+	unlink("/tmp/test_display_output");
+
+	ASSERT_TRUE(strstr(buffer, "colour1") != NULL);  /* 90% 应该是红色 */
 }
 
 static void test_display_mem_narrow_mode(void) {
@@ -243,6 +353,8 @@ int main(void) {
 
 	fprintf(stderr, "\n--- display_cpu 测试 ---\n");
 	RUN_TEST(test_display_cpu_wide_mode);
+	RUN_TEST(test_display_cpu_wide_mode_warning);
+	RUN_TEST(test_display_cpu_wide_mode_critical);
 	RUN_TEST(test_display_cpu_narrow_mode);
 	RUN_TEST(test_display_cpu_null_arg);
 
@@ -255,6 +367,8 @@ int main(void) {
 
 	fprintf(stderr, "\n--- display_mem 测试 ---\n");
 	RUN_TEST(test_display_mem_wide_mode);
+	RUN_TEST(test_display_mem_wide_mode_warning);
+	RUN_TEST(test_display_mem_wide_mode_critical);
 	RUN_TEST(test_display_mem_narrow_mode);
 	RUN_TEST(test_display_mem_null_arg);
 	RUN_TEST(test_display_mem_zero_total);
