@@ -8,9 +8,6 @@
 #define CPU_WARNING_THRESHOLD 0.60
 #define CPU_CRITICAL_THRESHOLD 0.85
 
-// Declare the function from cpu.c
-extern void init_cpu_tempfile(const char *socket_path);
-
 static int narrow = 0;
 
 static inline void exit_on_error(const char *msg) {
@@ -18,19 +15,25 @@ static inline void exit_on_error(const char *msg) {
 	exit(EXIT_FAILURE);
 }
 
-static inline const char *color(double rate) {
-	if (rate > CPU_CRITICAL_THRESHOLD) {
+/* ==================== 显示格式化 - 纯函数，可测试 ==================== */
+
+const char *get_color_for_rate(double rate) {
+	if (rate >= CPU_CRITICAL_THRESHOLD) {
 		return "#[bg=colour1,fg=colour255]";
 	}
-	if (rate > CPU_WARNING_THRESHOLD) {
+	if (rate >= CPU_WARNING_THRESHOLD) {
 		return "#[bg=colour3,fg=colour255]";
 	}
 	return "#[bg=colour10,fg=colour255]";
 }
 
-static inline void display_cpu(resource_usage *cpu, const char *name) {
+static const char *color(double rate) {
+	return get_color_for_rate(rate);
+}
+
+void display_cpu(resource_usage *cpu, const char *name, int narrow_mode) {
 	if (!cpu) { return; }
-	if (narrow) {
+	if (narrow_mode) {
 		printf("%s%3.1f%%%s|", color(cpu->rate), 100.0 * cpu->rate, color(0));
 	} else {
 		printf("%s %s%3.1f%%%s", color(cpu->rate), name, 100.0 * cpu->rate, color(0));
@@ -39,7 +42,7 @@ static inline void display_cpu(resource_usage *cpu, const char *name) {
 
 static const char units[] = "KMGTPEZY";
 
-static inline char new_unit(unsigned long long kb, double *new_size) {
+char new_unit(unsigned long long kb, double *new_size) {
 	double size = kb;
 	const char *p = units;
 	while (size >= 1000) {
@@ -52,22 +55,41 @@ static inline char new_unit(unsigned long long kb, double *new_size) {
 	return *p;
 }
 
-static inline void display_mem(resource_usage *mem) {
+void display_mem(resource_usage *mem, int narrow_mode) {
+	if (!mem || mem->total == 0) { return; }
+
 	double in_use, total;
 	double rate = ((double) mem->in_use) / mem->total;
-	char unit = new_unit(mem->total, &total);
+	double new_size_double;
+	char unit;
 
-	/* in_use = rate * total，两者单位一致 */
+	unit = new_unit(mem->total, &new_size_double);
+	total = new_size_double;
 	in_use = rate * total;
 
-	if (narrow) {
+	if (narrow_mode) {
 		printf("%s%.1f/%.1f[%c]%s", color(rate), in_use, total, unit, color(0));
 	} else {
 		printf(" %s%.1f/%.1f[%c]%s ", color(rate), in_use, total, unit, color(0));
 	}
 }
 
-int main(int argc, char *argv[]) {
+/* ==================== 显示逻辑的生产环境封装 ==================== */
+
+static void display_all(resource_usage *cpu, resource_usage *max_core, int cores,
+                        resource_usage *mem, int narrow_mode) {
+	display_cpu(cpu, "📊", narrow_mode);
+	if (cores > 1) {
+		display_cpu(max_core, "📈", narrow_mode);
+	}
+	display_mem(mem, narrow_mode);
+	printf("\n");
+	fflush(stdout);
+}
+
+/* ==================== 生产环境入口 ==================== */
+
+int resource_usage_main(int argc, char *argv[]) {
 	if (argc < 2) {
 		fprintf(stderr, "Usage: %s <tmux_socket_path> [narrow]\n", argv[0]);
 		exit(EXIT_FAILURE);
@@ -92,13 +114,6 @@ int main(int argc, char *argv[]) {
 		exit_on_error("failed to get memory usage");
 	}
 
-	display_cpu(&cpu, "📊");
-	if (cores > 1) {
-		display_cpu(&max_core, "📈");
-	}
-	display_mem(&mem);
-
-	printf("\n");
-	fflush(stdout);
+	display_all(&cpu, &max_core, cores, &mem, narrow);
 	return 0;
 }
