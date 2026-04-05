@@ -28,7 +28,7 @@ static inline void display_cpu(resource_usage *cpu, const char *name) {
 	if (narrow) {
 		printf("%s%3.1f%%%s|", color(cpu->rate), 100.0 * cpu->rate, color(0));
 	} else {
-		printf("%s %s:%3.1f%% %s", color(cpu->rate), name, 100.0 * cpu->rate, color(0));
+		printf("%s %s%3.1f%%%s", color(cpu->rate), name, 100.0 * cpu->rate, color(0));
 	}
 }
 
@@ -56,7 +56,7 @@ static inline void display_mem(resource_usage *mem) {
 	if (narrow) {
 		printf("%s%3.1f%c/%3.1f%c%s", color(rate), in_use, unit_in_use, total, unit_total, color(0));
 	} else {
-		printf("%s %3.1f%cB/%3.1f%cB %s", color(rate), in_use, unit_in_use, total, unit_total, color(0));
+		printf(" %s%3.1f%cB/%3.1f%cB%s ", color(rate), in_use, unit_in_use, total, unit_total, color(0));
 	}
 }
 
@@ -77,9 +77,9 @@ int main(int argc, char *argv[]) {
 		exit_on_error("failed to get memory usage");
 	}
 
-	display_cpu(&cpu, "CPU");
+	display_cpu(&cpu, "📊");
 	if (cores > 1) {
-		display_cpu(&max_core, "Core");
+		display_cpu(&max_core, "📈");
 	}
 	display_mem(&mem);
 
