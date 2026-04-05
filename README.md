@@ -11,8 +11,10 @@
 ```bash
 git clone https://github.com/nicky-zs/.tmux.git ~/.tmux
 ln -s ~/.tmux/tmux.conf ~/.tmux.conf
-cd ~/.tmux && make && sudo make install
+cd ~/.tmux && make
 ```
+
+编译后的二进制文件位于 `bin/resource_usage`，shell 脚本会自动调用它。
 
 ## Usage
 
@@ -30,12 +32,6 @@ make
 
 # 运行测试
 make test && make run-tests
-
-# 编译优化版本
-make release
-
-# 安装到 ~/.local
-make PREFIX=~/.local install
 
 # 清理
 make clean
