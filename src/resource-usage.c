@@ -50,13 +50,15 @@ static inline char new_unit(unsigned long long kb, double *new_size) {
 static inline void display_mem(resource_usage *mem) {
 	double in_use, total;
 	double rate = ((double) mem->in_use) / mem->total;
-	char unit_in_use = new_unit(mem->in_use, &in_use);
-	char unit_total = new_unit(mem->total, &total);
+	char unit = new_unit(mem->total, &total);
+
+	/* in_use = rate * total，两者单位一致 */
+	in_use = rate * total;
 
 	if (narrow) {
-		printf("%s%3.1f%c/%3.1f%c%s", color(rate), in_use, unit_in_use, total, unit_total, color(0));
+		printf("%s%.1f/%.1f[%c]%s", color(rate), in_use, total, unit, color(0));
 	} else {
-		printf(" %s%3.1f%cB/%3.1f%cB%s ", color(rate), in_use, unit_in_use, total, unit_total, color(0));
+		printf(" %s%.1f/%.1f[%c]%s ", color(rate), in_use, total, unit, color(0));
 	}
 }
 
