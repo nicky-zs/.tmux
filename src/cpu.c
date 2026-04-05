@@ -1,10 +1,61 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "resource-usage.h"
 
-static const char *cpu_tempfile = "/tmp/resource-usage.cpu.data";
+char *cpu_tempfile = NULL;
+
+void init_cpu_tempfile(const char *tmux_env) {
+	if (cpu_tempfile) return;
+
+	// $TMUX format: /socket/path,server-pid,session-id
+	// e.g., /tmp/tmux-1000/default,6490,0
+	// We use the full string to uniquely identify each tmux pane/session
+	const char *p = tmux_env;
+	// Find the last comma to get session-id
+	const char *session_id = NULL;
+	while (*p) {
+		if (*p == ',') session_id = p + 1;
+		p++;
+	}
+
+	// If we have a session ID, use socket_basename + session_id
+	// Otherwise fall back to full tmux env string hash
+	char unique_id[256];
+	if (session_id && *session_id) {
+		// Get socket basename
+		const char *basename = tmux_env;
+		p = tmux_env;
+		while (*p) {
+			if (*p == '/') basename = p + 1;
+			// Stop at first comma
+			if (*p == ',') break;
+			p++;
+		}
+		// Copy basename
+		size_t blen = p - basename;
+		if (blen >= sizeof(unique_id)) blen = sizeof(unique_id) - 1;
+		strncpy(unique_id, basename, blen);
+		unique_id[blen] = '\0';
+		// Append session_id
+		snprintf(unique_id + blen, sizeof(unique_id) - blen, ",%s", session_id);
+	} else {
+		// Fallback: use full string (truncated if needed)
+		strncpy(unique_id, tmux_env, sizeof(unique_id) - 1);
+		unique_id[sizeof(unique_id) - 1] = '\0';
+	}
+
+	// Allocate enough space for /tmp/resource-usage.cpu.<unique_id>.data
+	size_t len = strlen("/tmp/resource-usage.cpu..data") + strlen(unique_id) + 1;  // +1 for null terminator
+	cpu_tempfile = malloc(len);
+	if (!cpu_tempfile) {
+		perror("malloc");
+		exit(EXIT_FAILURE);
+	}
+	snprintf(cpu_tempfile, len, "/tmp/resource-usage.cpu.%s.data", unique_id);
+}
 
 typedef struct {
 	unsigned long long busy;
@@ -84,7 +135,7 @@ static int read_proc_stat(record_list *list) {
 	char *line = NULL;
 	char *token, *saveptr, *delim = " :\n";
 	while (getline(&line, &ignored, stream) != -1 && (token = strtok_r(line, delim, &saveptr))) {
-		if (!equals(token, "cpu")) { continue; } // break?
+		if (!equals(token, "cpu")) { continue; }
 
 		cpu_record record = { 0, 0 };
 		int i = 0;
@@ -98,6 +149,7 @@ static int read_proc_stat(record_list *list) {
 		record_list_add(list, &record);
 	}
 
+	free(line);
 	fclose(stream);
 	return 0;
 }

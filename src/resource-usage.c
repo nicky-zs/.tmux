@@ -2,12 +2,14 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-#include <argp.h>
 
 #include "resource-usage.h"
 
 #define CPU_WARNING_THRESHOLD 0.60
 #define CPU_CRITICAL_THRESHOLD 0.85
+
+// Declare the function from cpu.c
+extern void init_cpu_tempfile(const char *socket_path);
 
 static int narrow = 0;
 
@@ -66,7 +68,15 @@ static inline void display_mem(resource_usage *mem) {
 }
 
 int main(int argc, char *argv[]) {
-	if (argc > 1 && strcmp(argv[1], "narrow") == 0) {
+	if (argc < 2) {
+		fprintf(stderr, "Usage: %s <tmux_socket_path> [narrow]\n", argv[0]);
+		exit(EXIT_FAILURE);
+	}
+
+	// Initialize temp file path based on tmux socket
+	init_cpu_tempfile(argv[1]);
+
+	if (argc > 2 && strcmp(argv[2], "narrow") == 0) {
 		narrow = 1;
 	}
 
