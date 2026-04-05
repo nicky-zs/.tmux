@@ -6,18 +6,21 @@
 
 #include "resource-usage.h"
 
+#define CPU_WARNING_THRESHOLD 0.60
+#define CPU_CRITICAL_THRESHOLD 0.85
+
 static int narrow = 0;
 
 static inline void exit_on_error(const char *msg) {
 	errno ? perror(msg) : fprintf(stderr, "%s\n", msg);
-	exit(-1);
+	exit(EXIT_FAILURE);
 }
 
 static inline const char *color(double rate) {
-	if (rate > 0.85) {
+	if (rate > CPU_CRITICAL_THRESHOLD) {
 		return "#[bg=colour1,fg=colour255]";
 	}
-	if (rate > 0.60) {
+	if (rate > CPU_WARNING_THRESHOLD) {
 		return "#[bg=colour3,fg=colour255]";
 	}
 	return "#[bg=colour10,fg=colour255]";
