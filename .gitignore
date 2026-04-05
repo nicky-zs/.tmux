@@ -2,3 +2,4 @@ plugins/
 bin/
 *.swp
 *.out
+*_runner
