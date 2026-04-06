@@ -237,7 +237,7 @@ static void test_display_mem_wide_mode(void) {
 
 	/* 验证输出包含预期内容 */
 	ASSERT_TRUE(strstr(buffer, "4.0/16.0") != NULL);
-	ASSERT_TRUE(strstr(buffer, "[G]") != NULL);
+	ASSERT_TRUE(strstr(buffer, "㎇") != NULL);
 	ASSERT_TRUE(strstr(buffer, "colour10") != NULL);  /* 25% 应该是绿色 */
 }
 
@@ -324,8 +324,9 @@ static void test_display_mem_narrow_mode(void) {
 	fclose(temp);
 	unlink("/tmp/test_display_output");
 
+	/* 窄屏模式：紧凑格式，无单位符号 */
 	ASSERT_TRUE(strstr(buffer, "2.0/8.0") != NULL);
-	ASSERT_TRUE(strstr(buffer, "[G]") != NULL);
+	ASSERT_TRUE(strstr(buffer, "㎇") == NULL);  /* 窄屏模式不应该有㎇ */
 }
 
 static void test_display_mem_null_arg(void) {
