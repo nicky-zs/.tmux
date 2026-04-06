@@ -43,9 +43,9 @@ void format_cpu_segment(const char *emoji, double rate, int narrow_mode, char *b
 	if (!buffer || bufsize == 0) return;
 
 	if (narrow_mode) {
-		/* 窄屏：无 emoji，无单位，紧凑格式 "XX.X%|XX.X%|XX.X/XX.X" */
-		snprintf(buffer, bufsize, "%s%3.1f%%%s|",
-		         color(rate), 100.0 * rate, color(0));
+		/* 窄屏：带 emoji，紧凑格式 "📊XX.X%|" */
+		snprintf(buffer, bufsize, "%s%s%3.1f%%%s|",
+		         color(rate), emoji, 100.0 * rate, color(0));
 	} else {
 		/* 宽屏：带 emoji，格式 " 📊XX.X%" */
 		snprintf(buffer, bufsize, "%s %s%s%3.1f%%%s",
@@ -84,8 +84,8 @@ void format_mem_segment(double rate, unsigned long long total_kb, int narrow_mod
 	in_use = rate * total;
 
 	if (narrow_mode) {
-		/* 窄屏：无单位符号，紧凑格式 "XX.X/XX.X"（无前后空格） */
-		snprintf(buffer, bufsize, "%s%.1f/%.1f%s",
+		/* 窄屏：带㎇符号，紧凑格式 "㎇XX.X/XX.X" */
+		snprintf(buffer, bufsize, "%s㎇%.1f/%.1f%s",
 		         color(rate), in_use, total, color(0));
 	} else {
 		/* 宽屏：格式 " ㎇XX.X/XX.X " - ㎇跟着数值一起高亮 */

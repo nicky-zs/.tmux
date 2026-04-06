@@ -324,9 +324,9 @@ static void test_display_mem_narrow_mode(void) {
 	fclose(temp);
 	unlink("/tmp/test_display_output");
 
-	/* 窄屏模式：紧凑格式，无单位符号 */
+	/* 窄屏模式：带㎇符号，紧凑格式 */
 	ASSERT_TRUE(strstr(buffer, "2.0/8.0") != NULL);
-	ASSERT_TRUE(strstr(buffer, "㎇") == NULL);  /* 窄屏模式不应该有㎇ */
+	ASSERT_TRUE(strstr(buffer, "㎇") != NULL);  /* 窄屏模式也应该有㎇ */
 }
 
 static void test_display_mem_null_arg(void) {
