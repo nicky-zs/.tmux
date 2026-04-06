@@ -30,8 +30,11 @@ tmux source-file ~/.tmux.conf
 # 编译
 make
 
-# 运行测试
-make test && make run-tests
+# 运行测试（编译 → 运行 → 清理一步完成）
+make test
+
+# 单独运行肉眼观察测试（ANSI 彩色输出，分页显示）
+make view-test
 
 # 清理
 make clean
