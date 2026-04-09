@@ -39,7 +39,7 @@ make clean
   - `test_display.c` - 显示格式化测试
   - `test_status_line.c` - 状态行穷举测试（54 种组合）
 - `scripts/` - Shell 脚本
-  - `status-right.sh` - 状态栏右侧（直接调用 resource_usage）
+  - `status-right.sh` - 状态栏右侧（资源栏 + 时间栏拼接）
   - `status-left.sh` - 状态栏左侧
   - `helpers.sh` - 辅助函数
 - `bin/` - 编译产物
@@ -49,7 +49,7 @@ make clean
 
 **统一入口函数**（测试和生产共用）：
 ```c
-// 生成完整状态行（资源栏 + 时间栏）
+// 生成完整状态行（资源栏 + 时间栏），仅供测试使用
 void format_full_status_line(const display_state *state, int wide_mode, char *buffer, size_t bufsize);
 
 // 格式化时间栏
@@ -58,10 +58,15 @@ void format_time_segment(int wide_mode, char *buffer, size_t bufsize);
 
 **纯函数**（可测试）：
 ```c
-void format_status_line(const display_state *state, char *buffer, size_t bufsize);
+void format_status_line(const display_state *state, char *buffer, size_t bufsize);  // 资源栏
 void format_cpu_segment(const char *emoji, double rate, int narrow_mode, char *buffer, size_t bufsize);
 void format_mem_segment(double rate, unsigned long long total_kb, int narrow_mode, char *buffer, size_t bufsize);
 ```
+
+### 职责分离
+
+- **resource-usage.c**：只负责生成资源栏部分（CPU + 内存）
+- **status-right.sh**：负责拼接资源栏 + 时间栏，与 status-left.sh 保持一致的架构模式
 
 ### 测试框架
 
@@ -97,12 +102,13 @@ CPU%|CPU%|used/total 04/06 09:00:00
 **状态行穷举测试**（`test_status_line.c`）：
 - 组合维度：[宽屏，窄屏] × CPU[低，中，高] × 单核 [低，中，高] × 内存 [低，中，高]
 - 共 54 种组合
-- 使用统一函数 `format_full_status_line()`，确保测试和生产一致
+- 使用统一函数 `format_full_status_line()` 进行测试
 - ANSI 彩色输出，便于肉眼 review
+- 生产环境使用 `format_status_line()` 生成资源栏，由 shell 脚本拼接时间栏
 
 ## 特殊说明
 
 - CPU 临时文件路径由 `TMUX` 环境变量派生，位于 `/tmp/test_resource_${session_id}`
 - 仅支持 Linux（依赖 `/proc/stat` 和 `/proc/meminfo`）
 - 生产二进制文件：`bin/resource_usage`
-- **架构原则**：测试和生产必须走同一段代码（`format_full_status_line`）
+- **架构原则**：测试使用 `format_full_status_line` 验证完整逻辑，生产使用 `format_status_line` 由 shell 拼接

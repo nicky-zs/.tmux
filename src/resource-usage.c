@@ -332,7 +332,7 @@ int resource_usage_main(int argc, char *argv[]) {
 		exit_on_error("failed to get memory usage");
 	}
 
-	/* 使用统一函数生成完整的状态行（资源栏 + 时间栏） */
+	/* 生成资源栏部分（时间栏由 status-right.sh 负责拼接） */
 	display_state state = {
 		.narrow_mode = narrow_mode,
 		.cpu_rate = cpu.rate,
@@ -343,8 +343,8 @@ int resource_usage_main(int argc, char *argv[]) {
 	};
 
 	char buffer[1024];
-	format_full_status_line(&state, !narrow_mode, buffer, sizeof(buffer));
-	printf("%s\n", buffer);
+	format_status_line(&state, buffer, sizeof(buffer));
+	printf("%s", buffer);  /* 不带换行，由 shell 脚本拼接时间栏 */
 	fflush(stdout);
 
 	return 0;
